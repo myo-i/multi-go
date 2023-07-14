@@ -4,23 +4,31 @@ import (
 	"io"
 	"os"
 	"strings"
-	"sync"
 	"testing"
 )
 
-func Test_print(t *testing.T) {
+func Test_updateMessage(t *testing.T) {
+	wg.Add(1)
+
+	go updateMessage("alpha")
+
+	wg.Wait()
+
+	if msg != "alpha" {
+		t.Error("Not same")
+	}
+}
+
+func Test_printMessage(t *testing.T) {
 	stdOut := os.Stdout
 
 	r, w, _ := os.Pipe()
 	os.Stdout = w
 
-	var wg sync.WaitGroup
-	wg.Add(1)
+	msg = "gamma"
 
 	// printした段階でos.Stdoutに結果が書き込まれる
-	go print("One", &wg)
-
-	wg.Wait()
+	printMessage()
 
 	_ = w.Close()
 
@@ -30,7 +38,8 @@ func Test_print(t *testing.T) {
 	os.Stdout = stdOut
 
 	// たぶんパイプを使ってprintの結果を書き込んで、パイプから結果を読み込んで比較してる
-	if !strings.Contains(output, "One") {
+	if !strings.Contains(output, "gamma") {
 		t.Errorf("Not equal")
 	}
+
 }
