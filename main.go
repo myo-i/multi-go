@@ -6,35 +6,22 @@ import (
 )
 
 var msg string
+var wg sync.WaitGroup
 
 func updateMessage(s string) {
 	defer wg.Done()
 	msg = s
 }
 
-func printMessage() {
-	fmt.Println(msg)
-}
-
-var wg sync.WaitGroup
-
 func main() {
 
 	msg = "Hello, world!"
 
-	wg.Add(1)
-	go updateMessage("Hello, universe!")
-	wg.Done()
-	printMessage()
+	wg.Add(2)
+	go updateMessage("Hello, cat")
+	go updateMessage("Hello, bird")
+	wg.Wait()
 
-	wg.Add(1)
-	go updateMessage("Hello, cosmos!")
-	wg.Done()
-	printMessage()
+	fmt.Println(msg)
 
-	wg.Add(1)
-	go updateMessage("Hello, world!")
-	wg.Done()
-
-	printMessage()
 }
