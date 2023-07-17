@@ -5,7 +5,6 @@ import (
 	"sync"
 )
 
-var msg string
 var wg sync.WaitGroup
 
 type Income struct {
