@@ -8,40 +8,43 @@ import (
 var msg string
 var wg sync.WaitGroup
 
-// func updateMessage(s string, m *sync.Mutex) {
-// 	defer wg.Done()
-
-// 	m.Lock()
-// 	msg = s
-// 	m.Unlock()
-// }
-// func main() {
-// 	msg = "Hello, world!"
-
-// 	var mutex sync.Mutex
-
-// 	wg.Add(2)
-// 	go updateMessage("Hello, cat", &mutex)
-// 	go updateMessage("Hello, bird", &mutex)
-// 	wg.Wait()
-
-// 	fmt.Println(msg)
-
-// }
-func updateMessage(s string) {
-	defer wg.Done()
-
-	msg = s
+type Income struct {
+	Source string
+	Amount int
 }
 
 func main() {
-	msg = "Hello, world!"
+	var bankBalance int
+	var balance sync.Mutex
 
-	wg.Add(2)
-	go updateMessage("Hello, cat")
-	go updateMessage("Hello, bird")
+	fmt.Printf("Initial balance: $%d\n", bankBalance)
+
+	incomes := []Income{
+		{Source: "Job", Amount: 600},
+		{Source: "Gifts", Amount: 20},
+		{Source: "Investments", Amount: 100},
+		{Source: "Part time", Amount: 30},
+	}
+
+	wg.Add(len(incomes))
+
+	for i, income := range incomes {
+		go func(i int, income Income) {
+			defer wg.Done()
+			for week := 1; week <= 52; week++ {
+				balance.Lock()
+				temp := bankBalance
+				temp += income.Amount
+				bankBalance = temp
+				balance.Unlock()
+
+				fmt.Printf("On week %d, Earned $%d.00, from %s\n", week, income.Amount, income.Source)
+
+			}
+		}(i, income)
+	}
+
 	wg.Wait()
 
-	fmt.Println(msg)
-
+	fmt.Printf("Sum: %d", bankBalance)
 }
