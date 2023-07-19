@@ -5,8 +5,6 @@ import (
 	"image/color"
 	"math/rand"
 	"time"
-
-	"golang.org/x/text/message"
 )
 
 const NumberOfChicken = 10
@@ -77,8 +75,18 @@ func kfcShop(chickenMaker *Producer) {
 	// チャネルに何かしらの情報を取得するまでは起動し続ける
 	var i = 0
 	for {
-		// 処理
 		currentChicken := makeChicken(i)
+		if currentChicken != nil {
+			i = currentChicken.chickenNumber
+			select {
+			case chickenMaker.data <- *currentChicken:
+
+			case quitChan := <-chickenMaker.quit:
+				close(chickenMaker.data)
+				close(quitChan)
+				return
+			}
+		}
 	}
 }
 
