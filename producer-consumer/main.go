@@ -1,9 +1,12 @@
 package producerconsumer
 
 import (
+	"fmt"
 	"image/color"
 	"math/rand"
 	"time"
+
+	"golang.org/x/text/message"
 )
 
 const NumberOfChicken = 10
@@ -27,10 +30,55 @@ func (p *Producer) Close() error {
 	return <-ch
 }
 
+func makeChicken(chickenNumber int) *ChickenOrder {
+	chickenNumber++
+	if chickenNumber <= NumberOfChicken {
+		delay := rand.Intn(5) + 1
+		fmt.Printf("Received order number #%d\n", chickenNumber)
+
+		rnd := rand.Intn(12) + 1
+		msg := ""
+		success := false
+
+		if rnd < 5 {
+			chickenFailed++
+		} else {
+			chickenMade++
+		}
+		total++
+
+		fmt.Printf("Making chicken #%d. It will take %d seconds....\n", chickenNumber, delay)
+		time.Sleep(time.Duration(delay) * time.Second)
+
+		if rnd <= 2 {
+			msg = fmt.Sprintf("*** out of ingredients for chicken #%d", chickenNumber)
+		} else if rnd <= 4 {
+			msg = fmt.Sprintf("*** quit while making chicken #%d", chickenNumber)
+		} else {
+			success = true
+			msg = fmt.Sprintf("#%d is reafy", chickenNumber)
+		}
+
+		c := ChickenOrder{
+			chickenNumber: chickenNumber,
+			message:       msg,
+			success:       success,
+		}
+
+		return &c
+	}
+
+	return &ChickenOrder{
+		chickenNumber: chickenNumber,
+	}
+}
+
 func kfcShop(chickenMaker *Producer) {
 	// チャネルに何かしらの情報を取得するまでは起動し続ける
+	var i = 0
 	for {
 		// 処理
+		currentChicken := makeChicken(i)
 	}
 }
 
