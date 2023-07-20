@@ -2,39 +2,144 @@ package main
 
 import (
 	"fmt"
-	"sync"
+	"math/rand"
+	"time"
+
+	"github.com/fatih/color"
 )
 
-var msg string
+const NumberOfChicken = 10
 
-func updateMessage(s string) {
-	defer wg.Done()
-	msg = s
+var chickenMade, chickenFailed, total int
+
+type Producer struct {
+	data chan ChickenOrder
+	quit chan chan error
 }
 
-func printMessage() {
-	fmt.Println(msg)
+type ChickenOrder struct {
+	chickenNumber int
+	message       string
+	success       bool
 }
 
-var wg sync.WaitGroup
+func (p *Producer) Close() error {
+	ch := make(chan error)
+	p.quit <- ch
+	return <-ch
+}
+
+func makeChicken(chickenNumber int) *ChickenOrder {
+	chickenNumber++
+	if chickenNumber <= NumberOfChicken {
+		delay := rand.Intn(5) + 1
+		fmt.Printf("Received order number #%d\n", chickenNumber)
+
+		rnd := rand.Intn(12) + 1
+		msg := ""
+		success := false
+
+		if rnd < 5 {
+			chickenFailed++
+		} else {
+			chickenMade++
+		}
+		total++
+
+		fmt.Printf("Making chicken #%d. It will take %d seconds....\n", chickenNumber, delay)
+		time.Sleep(time.Duration(delay) * time.Second)
+
+		if rnd <= 2 {
+			msg = fmt.Sprintf("*** out of ingredients for chicken #%d", chickenNumber)
+		} else if rnd <= 4 {
+			msg = fmt.Sprintf("*** quit while making chicken #%d", chickenNumber)
+		} else {
+			success = true
+			msg = fmt.Sprintf("#%d is reafy", chickenNumber)
+		}
+
+		c := ChickenOrder{
+			chickenNumber: chickenNumber,
+			message:       msg,
+			success:       success,
+		}
+
+		return &c
+	}
+
+	return &ChickenOrder{
+		chickenNumber: chickenNumber,
+	}
+}
+
+func kfcShop(chickenMaker *Producer) {
+	// チャネルに何かしらの情報を取得するまでは起動し続ける
+	var i = 0
+	for {
+		currentChicken := makeChicken(i)
+		if currentChicken != nil {
+			i = currentChicken.chickenNumber
+			select {
+			case chickenMaker.data <- *currentChicken:
+
+			case quitChan := <-chickenMaker.quit:
+				close(chickenMaker.data)
+				close(quitChan)
+				return
+			}
+		}
+	}
+}
 
 func main() {
+	// rand.Seed(time.Now().UnixNano())
+	rand.New(rand.NewSource(time.Now().UnixNano()))
 
-	msg = "Hello, world!"
+	color.Cyan("KFC is open!!")
+	color.Cyan("----------")
 
-	wg.Add(1)
-	go updateMessage("Hello, universe!")
-	wg.Done()
-	printMessage()
+	// create producer
+	kfcjob := &Producer{
+		data: make(chan ChickenOrder),
+		quit: make(chan chan error),
+	}
 
-	wg.Add(1)
-	go updateMessage("Hello, cosmos!")
-	wg.Done()
-	printMessage()
+	// run producer in the background
+	go kfcShop(kfcjob)
 
-	wg.Add(1)
-	go updateMessage("Hello, world!")
-	wg.Done()
+	for i := range kfcjob.data {
+		if i.chickenNumber <= NumberOfChicken {
+			if i.success {
+				color.Green(i.message)
+				color.Green("Order #%d is out for delivery", i.chickenNumber)
+			} else {
+				color.Red(i.message)
+				color.Red("Can't delivery!!")
+			}
+		} else {
+			color.Cyan("Done making chickens...")
+			err := kfcjob.Close()
+			if err != nil {
+				color.Red("Error closing channel", err)
+			}
+		}
+	}
 
-	printMessage()
+	color.Cyan("---------------------")
+	color.Cyan("Done for the day work")
+
+	color.Cyan("We made %d chickens, but failed to make %d, with %d attempts in total.", chickenMade, chickenFailed, total)
+
+	switch {
+	case chickenFailed > 9:
+		color.Red("It was awful day...")
+	case chickenFailed >= 6:
+		color.Red("It was not a vary good day...")
+	case chickenFailed >= 4:
+		color.Red("It was an okay day...")
+	case chickenFailed >= 2:
+		color.Red("It was a pretty good day!")
+	default:
+		color.Green("It was a great day")
+	}
 }
