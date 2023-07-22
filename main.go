@@ -92,7 +92,6 @@ func kfcShop(chickenMaker *Producer) {
 }
 
 func main() {
-	// rand.Seed(time.Now().UnixNano())
 	rand.New(rand.NewSource(time.Now().UnixNano()))
 
 	color.Cyan("KFC is open!!")
