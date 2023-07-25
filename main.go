@@ -73,7 +73,6 @@ func makeChicken(chickenNumber int) *ChickenOrder {
 }
 
 func kfcShop(chickenMaker *Producer) {
-	// チャネルに何かしらの情報を取得するまでは起動し続ける
 	var i = 0
 	for {
 		currentChicken := makeChicken(i)
@@ -97,7 +96,6 @@ func main() {
 	color.Cyan("KFC is open!!")
 	color.Cyan("----------")
 
-	// create producer
 	kfcjob := &Producer{
 		data: make(chan ChickenOrder),
 		quit: make(chan chan error),
