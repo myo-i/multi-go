@@ -133,9 +133,9 @@ func main() {
 	case chickenFailed >= 6:
 		color.Red("It was not a vary good day...")
 	case chickenFailed >= 4:
-		color.Red("It was an okay day...")
+		color.Yellow("It was an okay day...")
 	case chickenFailed >= 2:
-		color.Red("It was a pretty good day!")
+		color.Yellow("It was a pretty good day!")
 	default:
 		color.Green("It was a great day")
 	}
